@@ -1,0 +1,63 @@
+<!--
+  Retention des journaux internes de ClickHouse (tables system.*_log).
+
+  Pourquoi : par defaut ClickHouse conserve ses propres journaux de debogage
+  sans aucune limite. Au 2026-08-11 ils occupaient 14,3 Gio dans le volume
+  langfuse-claude_langfuse_clickhouse_data (system.trace_log 7,45 Gio /
+  369 millions de lignes, system.text_log 2,85 Gio, system.asynchronous_metric_log
+  2,14 Gio / 3,62 milliards de lignes, system.metric_log 1008 Mio,
+  system.part_log 842 Mio), alors que les traces Langfuse elles-memes
+  (base `default`) pesaient 1,14 Kio.
+
+  Ces tables ne contiennent aucune donnee metier : ce sont les journaux de
+  profilage du serveur ClickHouse. On les garde 7 jours pour pouvoir
+  diagnostiquer une lenteur recente, et on les laisse expirer ensuite.
+
+  Un TTL equivalent a ete pose directement par ALTER TABLE le 2026-08-11 ;
+  ce fichier est le filet de securite qui reapplique la retention si les
+  tables sont recreees (mise a jour de l'image clickhouse/clickhouse-server,
+  qui est suivie sans tag donc en `latest`).
+-->
+<clickhouse>
+    <!--
+      Journaux fichiers du serveur (volume langfuse-claude_langfuse_clickhouse_logs).
+      Au 2026-08-11 ils pesaient 1,5 Gio : clickhouse-server.log actif de 716 Mio
+      plus trois archives compressees de ~88 Mio chacune, sans plafond.
+      On plafonne a 100 Mio par fichier et 3 archives, soit ~400 Mio au maximum.
+    -->
+    <logger>
+        <size>100M</size>
+        <count>3</count>
+    </logger>
+
+    <trace_log>
+        <ttl>event_date + INTERVAL 7 DAY DELETE</ttl>
+    </trace_log>
+    <text_log>
+        <ttl>event_date + INTERVAL 7 DAY DELETE</ttl>
+    </text_log>
+    <asynchronous_metric_log>
+        <ttl>event_date + INTERVAL 7 DAY DELETE</ttl>
+    </asynchronous_metric_log>
+    <metric_log>
+        <ttl>event_date + INTERVAL 7 DAY DELETE</ttl>
+    </metric_log>
+    <part_log>
+        <ttl>event_date + INTERVAL 7 DAY DELETE</ttl>
+    </part_log>
+    <query_log>
+        <ttl>event_date + INTERVAL 7 DAY DELETE</ttl>
+    </query_log>
+    <query_metric_log>
+        <ttl>event_date + INTERVAL 7 DAY DELETE</ttl>
+    </query_metric_log>
+    <processors_profile_log>
+        <ttl>event_date + INTERVAL 7 DAY DELETE</ttl>
+    </processors_profile_log>
+    <error_log>
+        <ttl>event_date + INTERVAL 7 DAY DELETE</ttl>
+    </error_log>
+    <background_schedule_pool_log>
+        <ttl>event_date + INTERVAL 7 DAY DELETE</ttl>
+    </background_schedule_pool_log>
+</clickhouse>
