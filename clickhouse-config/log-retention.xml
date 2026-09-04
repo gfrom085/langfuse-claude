@@ -60,4 +60,10 @@
     <background_schedule_pool_log>
         <ttl>event_date + INTERVAL 7 DAY DELETE</ttl>
     </background_schedule_pool_log>
+    <opentelemetry_span_log>
+        <!-- Cette table n'a pas de colonne event_date : sa colonne de date est
+             finish_date. Un TTL sur event_date y echoue (UNKNOWN_IDENTIFIER),
+             constate le 2026-09-04. -->
+        <ttl>finish_date + INTERVAL 7 DAY DELETE</ttl>
+    </opentelemetry_span_log>
 </clickhouse>
